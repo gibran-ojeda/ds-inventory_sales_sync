@@ -283,7 +283,7 @@ def crearDataframeExistenciaFinal(dfExistencias):
         'TipoProducto': 'first',
         'Modelo': 'first',
         'Marca': 'first',
-        "Publico En General": 'mean'
+        "Publico General": 'mean'
     }).reset_index()
     
     # Combinar el pivot con los datos adicionales
@@ -340,19 +340,19 @@ def creaDataFrameExistenciasComprasFinal(dfExistenciasFinal, dfCompras):
     #CASI LO FINAL
     dfExistenciasComprasFinal =  pd.merge(dfExistenciasFinal, dfFiltradoCompras, on="ProdConcat", how="left")
     dfExistenciasComprasFinal.rename(columns={'Existencia': 'Existencia Global', 'Fecha':'Última Fecha Compra', 'Costo':'Precio Compra', 'Cantidad':'Cantidad Comprada Ultimo Mov'}, inplace=True)
-    # Verificar si 'Publico En General' es un DataFrame y corregir
-    if isinstance(dfExistenciasComprasFinal["Publico En General"], pd.DataFrame):
+    # Verificar si 'Publico General' es un DataFrame y corregir
+    if isinstance(dfExistenciasComprasFinal["Publico General"], pd.DataFrame):
         # Si es un DataFrame, tomar la primera columna válida (ajustar según necesidad)
-        dfExistenciasComprasFinal["Publico En General"] = dfExistenciasComprasFinal["Publico En General"].iloc[:, 0]
+        dfExistenciasComprasFinal["Publico General"] = dfExistenciasComprasFinal["Publico General"].iloc[:, 0]
     # Lista actual de columnas en el DataFrame
     columnas_actuales = dfExistenciasComprasFinal.columns.tolist()
     # Crear un nuevo orden, asegurando que no se dupliquen columnas
     columnas_nuevo_orden = []
     for col in columnas_actuales:
-        if col != "Publico En General" and col != "Cantidad Comprada Ultimo Mov":  # Evitar duplicar la columna en su posición original
+        if col != "Publico General" and col != "Cantidad Comprada Ultimo Mov":  # Evitar duplicar la columna en su posición original
             columnas_nuevo_orden.append(col)
-        if col == "Precio Compra":  # Insertar "Publico En General" después de "Precio Compra"
-            columnas_nuevo_orden.append("Publico En General")
+        if col == "Precio Compra":  # Insertar "Publico General" después de "Precio Compra"
+            columnas_nuevo_orden.append("Publico General")
         if col == "Última Fecha Compra":
             columnas_nuevo_orden.append("Cantidad Comprada Ultimo Mov")
     # Reorganizar las columnas del DataFrame
@@ -361,17 +361,17 @@ def creaDataFrameExistenciasComprasFinal(dfExistenciasFinal, dfCompras):
     IVA = .16
     CIEN = 100
     # Verificar que las columnas sean numéricas y manejar NaN
-    if pd.api.types.is_numeric_dtype(dfExistenciasComprasFinal["Publico En General"]) and pd.api.types.is_numeric_dtype(dfExistenciasComprasFinal["Precio Compra"]):
+    if pd.api.types.is_numeric_dtype(dfExistenciasComprasFinal["Publico General"]) and pd.api.types.is_numeric_dtype(dfExistenciasComprasFinal["Precio Compra"]):
         # Rellenar NaN con 0 para evitar errores durante la resta
-        dfExistenciasComprasFinal["Publico En General"] = dfExistenciasComprasFinal["Publico En General"].fillna(0)
+        dfExistenciasComprasFinal["Publico General"] = dfExistenciasComprasFinal["Publico General"].fillna(0)
         dfExistenciasComprasFinal["Precio Compra"] = dfExistenciasComprasFinal["Precio Compra"].fillna(0)
         # Crear la columna 'Utilidad Bruta'
         dfExistenciasComprasFinal['Costo'] = dfExistenciasComprasFinal["Precio Compra"]+(dfExistenciasComprasFinal["Precio Compra"]*IVA)
         # Crear la columna 'Utilidad Bruta'
-        dfExistenciasComprasFinal['Utilidad'] = ((dfExistenciasComprasFinal["Publico En General"]-dfExistenciasComprasFinal['Costo'])/dfExistenciasComprasFinal['Publico En General']) * CIEN
+        dfExistenciasComprasFinal['Utilidad'] = ((dfExistenciasComprasFinal["Publico General"]-dfExistenciasComprasFinal['Costo'])/dfExistenciasComprasFinal['Publico General']) * CIEN
         print("Columna 'Utilidad' y 'Costo' creada exitosamente.")
     else:
-        print("Error: Las columnas 'Publico En General' y 'Precio Compra' deben ser numéricas.")
+        print("Error: Las columnas 'Publico General' y 'Precio Compra' deben ser numéricas.")
     # Lista actual de columnas en el DataFrame
     columnas_actuales = dfExistenciasComprasFinal.columns.tolist()
     # Crear un nuevo orden, asegurando que no se dupliquen columnas
@@ -497,7 +497,7 @@ piezasConsumidasCC = fusionar_archivos_excel(lista_archivos=archivosPiezasConsum
 validar_archivos([existenciasCC, comprasCC, ventasCC, piezasConsumidasCC]) 
 
 #Qué columnas ocupamos de cada paquete de archivos
-columnasExistencias = ["Almacen", "ProdConcat", "Existencia", "Nombre", "TipoProducto", "Marca", "Modelo", "Publico En General"]
+columnasExistencias = ["Almacen", "ProdConcat", "Existencia", "Nombre", "TipoProducto", "Marca", "Modelo", "Publico General"]
 columnasCompras = ["Almacen", "Fecha", "Producto", "Costo", "Cantidad"]
 columnasVentas = ["Almacen", "ProdConcat", "Cantidad"]
 columnasPiezasConsumidas = ["Almacén Salida Reparación", "Producto", "Cantidad"]
@@ -521,7 +521,10 @@ dfPiezasConsumidas.rename(columns={
 }, inplace=True)
 
 # Eliminar filas duplicadas considerando todas las columnas
-dfPiezasConsumidas.drop_duplicates(inplace=True)
+# Este paso se comenta debido a que en una versión del reporte que saca plows
+# se detectaron piezas consumidas duplicadas por lo que se decidió no eliminar duplicados
+# sin embargo parece ser que actualmente esto ya no ocurre
+# dfPiezasConsumidas.drop_duplicates(inplace=True)
 
 
 dfVentas = convertir_columna_uppercase(dfVentas, "ProdConcat")
@@ -565,6 +568,14 @@ archivosTrabajados = archivosTrabajados + archivosCompilados + archivosBI
 print(archivosTrabajados)
 mover_archivos_a_carpeta(archivosTrabajados, "BI-DATA-CC")
 
+print("Análisis de datos finalizado.")
+print("####################################################")
+print("####################################################")
+print("####################################################")
+print("####################################################")
+print("####################################################")
+print("####################################################")
+print("####################################################")
 
 # Cerrar la ventana de la terminal
 os.system("TASKKILL /F /IM cmd.exe")
